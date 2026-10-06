@@ -64,21 +64,11 @@ async def lifespan(app: FastAPI):
 # ---------------------------------------------------------------------------
 app = FastAPI(title="Food-101 Classifier API", version="1.0.0", lifespan=lifespan)
 
-# CORS — allow localhost during dev; override with FRONTEND_ORIGIN in production
-frontend_origin = os.getenv("FRONTEND_ORIGIN", "")
-origins = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:3000",
-]
-if frontend_origin:
-    origins.append(frontend_origin)
-
+# CORS — allow all origins so Vercel frontend, previews, and local dev can connect seamlessly
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
