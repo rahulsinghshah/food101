@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import './App.css';
+import { FOOD_CLASSES } from './foodClasses';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -10,9 +11,22 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [dragActive, setDragActive] = useState(false);
+  const [showClasses, setShowClasses] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const fileInputRef = useRef(null);
 
   const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+
+  // Close modal on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowClasses(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleFile = (file) => {
     setError(null);
@@ -98,11 +112,25 @@ function App() {
     }
   };
 
+  const filteredClasses = FOOD_CLASSES.filter((name) =>
+    name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+  );
+
   return (
     <div className="app">
       {/* Header */}
       <header className="header">
-        <span className="header__badge">EfficientNet B0</span>
+        <div className="header__badges">
+          <span className="header__badge">EfficientNet B0</span>
+          <button
+            type="button"
+            className="header__badge header__badge--clickable"
+            onClick={() => setShowClasses(true)}
+            title="Click to view all 101 food classes"
+          >
+            📋 101 Food Classes
+          </button>
+        </div>
         <h1 className="header__title">Food-101 Classifier</h1>
         <p className="header__subtitle">
           Upload a food image and let the model identify it from 101 categories.
@@ -213,7 +241,82 @@ function App() {
             </button>
           </div>
         )}
+
+        {/* Quick link below card to view classes */}
+        <div className="card__footer">
+          <button
+            type="button"
+            className="link-btn"
+            onClick={() => setShowClasses(true)}
+          >
+            Browse all 101 supported food categories →
+          </button>
+        </div>
       </div>
+
+      {/* 101 Classes Modal */}
+      {showClasses && (
+        <div className="modal-overlay" onClick={() => setShowClasses(false)}>
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="modal-header">
+              <div>
+                <h2 className="modal-title">Supported Food Categories</h2>
+                <p className="modal-subtitle">
+                  {filteredClasses.length} of {FOOD_CLASSES.length} categories shown
+                </p>
+              </div>
+              <button
+                type="button"
+                className="modal-close"
+                onClick={() => setShowClasses(false)}
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Search Input */}
+            <div className="modal-search">
+              <span className="modal-search__icon">🔍</span>
+              <input
+                type="text"
+                placeholder="Search food (e.g., pizza, sushi, cake)..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                autoFocus
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="modal-search__clear"
+                  onClick={() => setSearchQuery('')}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Grid of Food Categories */}
+            <div className="classes-grid">
+              {filteredClasses.length > 0 ? (
+                filteredClasses.map((food, idx) => (
+                  <div key={idx} className="class-chip">
+                    <span className="class-chip__dot">•</span>
+                    <span className="class-chip__name">{food}</span>
+                  </div>
+                ))
+              ) : (
+                <p className="classes-empty">No food categories found matching "{searchQuery}"</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="footer">
