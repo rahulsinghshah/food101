@@ -53,7 +53,7 @@ async def lifespan(app: FastAPI):
     import tensorflow as tf
 
     print(f"Loading model from {MODEL_PATH} …")
-    model = tf.keras.models.load_model(MODEL_PATH)
+    model = tf.keras.models.load_model(MODEL_PATH, compile=False)
     print("Model loaded successfully.")
     yield
     model = None
