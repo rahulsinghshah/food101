@@ -2,7 +2,12 @@ import { useState, useRef, useEffect } from 'react';
 import './App.css';
 import { FOOD_CLASSES } from './foodClasses';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const DEFAULT_API_URL = import.meta.env.DEV
+  ? 'http://localhost:8000'
+  : 'https://food101-wbxh.onrender.com';
+
+const RAW_API_URL = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
+const API_URL = RAW_API_URL.replace(/\/+$/, '');
 
 function App() {
   const [image, setImage] = useState(null);
