@@ -94,20 +94,39 @@ function App() {
     formData.append('file', image);
 
     try {
-      const response = await fetch(`${API_URL}/predict`, {
-        method: 'POST',
-        body: formData,
-      });
+      const primaryUrl = `${API_URL}/predict`;
+      let response;
+
+      try {
+        response = await fetch(primaryUrl, {
+          method: 'POST',
+          body: formData,
+        });
+      } catch (fetchErr) {
+        // If direct fetch fails (e.g., cross-origin CORS restriction on Render),
+        // fallback to the same-origin Vercel rewrite proxy
+        if (!import.meta.env.DEV && primaryUrl.startsWith('http')) {
+          response = await fetch('/api/predict', {
+            method: 'POST',
+            body: formData,
+          });
+        } else {
+          throw fetchErr;
+        }
+      }
 
       if (!response.ok) {
         const data = await response.json().catch(() => null);
+        if (response.status === 502 || response.status === 503 || response.status === 504) {
+          throw new Error('Backend is waking up (Render cold start). Please wait 30 seconds and try again.');
+        }
         throw new Error(data?.detail || `Server error (${response.status})`);
       }
 
       const data = await response.json();
       setResult(data);
     } catch (err) {
-      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+      if (err.name === 'TypeError' || (err.message && err.message.toLowerCase().includes('fetch'))) {
         setError('Cannot connect to the API. Make sure the backend is running.');
       } else {
         setError(err.message || 'Something went wrong. Please try again.');

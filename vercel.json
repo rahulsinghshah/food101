@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/predict",
+      "destination": "https://food101-wbxh.onrender.com/predict"
+    },
+    {
+      "source": "/api/:match*",
+      "destination": "https://food101-wbxh.onrender.com/:match*"
+    }
+  ]
+}
